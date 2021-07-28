@@ -2,6 +2,8 @@ var ParseBoy = require('./ParseBoy');
 var processing = require('./libs/processing');
 var _ = require('underscore');
 var logger = require('tracer').colorConsole();
+const util = require('util')
+
 
 var parser = {
   parseResumeFile: function(file, savePath, cbAfterParse) {
@@ -9,6 +11,7 @@ var parser = {
       savedFiles = 0;
 
     var onFileReady = function(preppedFile, error) {
+      console.log("this is the prepped file: " + JSON.stringify(preppedFile))
       if (error) {
         return cbAfterParse(null, error);
       }
@@ -26,11 +29,32 @@ var parser = {
             );
           }
           logger.trace('Resume ' + preppedFile.name + ' saved');
-          return cbAfterParse(preppedFile.name);
+          return cbAfterParse(Resume);
         });
       });
     };
+    console.log(file)
     processing.runFile(file, onFileReady);
+  },
+  parseResumeFileReturn: function(file, cbAfterParse) {
+    var objParseBoy = new ParseBoy(),
+      savedFiles = 0;
+
+    var onFileReady = function(preppedFile, error) {
+      console.log("this is the prepped file: " + JSON.stringify(preppedFile))
+      if (error) {
+        return cbAfterParse(null, error);
+      }
+      objParseBoy.parseFileReturn(preppedFile, function(Resume) {
+        logger.trace(
+          'I got Resume for ' + preppedFile.name + ', now saving...'
+        );
+
+        return cbAfterParse(Resume)
+      });
+    };
+    console.log('this is the test' + file)
+    processing.runFileReturn(file.tempFilePath, file.mimetype.endsWith('octet-stream')? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : file.mimetype, onFileReady);
   },
   parseResumeUrl: function(url, cbAfterParse) {
     var objParseBoy = new ParseBoy();

@@ -2,11 +2,13 @@
 const path = require('path'),
   _ = require('underscore'),
   textract = require('textract'),
-  mime = require('mime-types'),
+  mime = require('mime'),
   fs = require('fs'),
   logger = require('tracer').colorConsole();
 
 module.exports.runFile = processFile;
+module.exports.runFileReturn = processFileReturn;
+
 module.exports.runUrl = processUrl;
 
 /**
@@ -16,6 +18,25 @@ module.exports.runUrl = processUrl;
  */
 function processFile(file, cbAfterProcessing) {
   extractTextFile(file, function(PreparedFile, error) {
+    if (_.isFunction(cbAfterProcessing)) {
+      if (error) {
+        return cbAfterProcessing(null, error);
+      }
+      cbAfterProcessing(PreparedFile);
+    } else {
+      logger.error('cbAfterProcessing should be a function');
+      cbAfterProcessing(null, 'cbAfterProcessing should be a function');
+    }
+  });
+}
+
+/**
+ *
+ * @param file
+ * @param cbAfterProcessing
+ */
+ function processFileReturn(file, type , cbAfterProcessing) {
+  extractTextFileReturn(file, type, function(PreparedFile, error) {
     if (_.isFunction(cbAfterProcessing)) {
       if (error) {
         return cbAfterProcessing(null, error);
@@ -70,7 +91,34 @@ function cleanTextByRows(data) {
  */
 function extractTextFile(file, cbAfterExtract) {
   logger.trace(file);
-  textract.fromFileWithPath(file, { preserveLineBreaks: true }, function(
+  textract.fromFileWithPath(file, {preserveLineBreaks: true }, function(
+    err,
+    data
+  ) {
+    if (err) {
+      logger.error(err);
+      return cbAfterExtract(null, err);
+    }
+    if (_.isFunction(cbAfterExtract)) {
+      data = cleanTextByRows(data);
+      var File = new PreparedFile(file, data.replace(/^\s/gm, ''));
+      cbAfterExtract(File);
+    } else {
+      logger.error('cbAfterExtract should be a function');
+      return cbAfterExtract(null, 'cbAfterExtract should be a function');
+    }
+  });
+}
+
+
+/**
+ *
+ * @param file
+ * @param cbAfterExtract
+ */
+ function extractTextFileReturn(file, type , cbAfterExtract) {
+  logger.trace(file);
+  textract.fromFileWithPath(file, {typeOverride:type ,preserveLineBreaks: true }, function(
     err,
     data
   ) {

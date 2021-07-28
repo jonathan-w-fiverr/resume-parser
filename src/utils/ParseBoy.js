@@ -20,6 +20,13 @@ ParseBoy.prototype.parseFile = function(PreparedFile, cbGetResume) {
   parser.parse(PreparedFile, cbGetResume);
 };
 
+ParseBoy.prototype.parseFileReturn = function(PreparedFile, cbGetResume) {
+  logger.trace('I\'m working with "' + PreparedFile.name + '" now');
+  //PreparedFile.raw=PreparedFile.data
+  console.log("this is the data:" +PreparedFile.raw)
+  parser.parse(PreparedFile, cbGetResume);
+};
+
 ParseBoy.prototype.parseUrl = function(PreparedData, cbGetResume) {
   logger.trace("I'm working with file buffer now");
   parser.parse(
